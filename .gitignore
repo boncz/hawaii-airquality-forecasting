@@ -1,0 +1,19 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.env
+
+# Data (optional)
+data/raw/*
+!data/raw/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
