@@ -10,10 +10,6 @@ __pycache__/
 venv/
 .env
 
-# Data (optional)
-data/raw/*
-!data/raw/.gitkeep
-
 # OS files
 .DS_Store
 Thumbs.db
