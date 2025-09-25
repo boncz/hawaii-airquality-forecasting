@@ -1,0 +1,2 @@
+DateObserved,HourObserved,LocalTimeZone,ReportingArea,StateCode,Latitude,Longitude,ParameterName,AQI,Category
+2025-09-24,21,HST,Hilo,HI,19.7175,-155.1103,PM2.5,10,"{'Number': 1, 'Name': 'Good'}"
