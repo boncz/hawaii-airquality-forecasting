@@ -13,3 +13,12 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+
+# old notebooks to reference
+build_dataset.ipynb
+eda.ipynb 
+pull_aqs_airnow.ipynb
+pull_aqs.ipynb
+pull_hvo_episodes.ipynb
+pull_openmeteo.ipynb
+pull_purpleair.ipynb
