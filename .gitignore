@@ -22,3 +22,6 @@ pull_aqs.ipynb
 pull_hvo_episodes.ipynb
 pull_openmeteo.ipynb
 pull_purpleair.ipynb
+
+# too big data files
+data/raw/aqs/aqs_all.csv
