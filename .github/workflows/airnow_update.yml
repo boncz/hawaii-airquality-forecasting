@@ -1,12 +1,12 @@
-name: Weekly AirNow Data Update
+name: Daily AirNow Data Update
 
 on:
   schedule:
-    - cron: "0 10 * * 1"  # every Monday at 10:00 UTC
-  workflow_dispatch:      # allows manual trigger
+    - cron: "0 12 * * *"  # every day at 12:00 UTC (~2 a.m. HST)
+  workflow_dispatch:
 
 jobs:
-  update-airnow:
+  update-airnow-daily:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,16 +23,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests python-dotenv urllib3
 
-      - name: Run AirNow ingestion
+      - name: Run daily AirNow ingestion
         env:
           AIRNOW_KEY: ${{ secrets.AIRNOW_KEY }}
         run: |
-          python src/ingestion/airnow.py
+          python src/ingestion/airnow_daily.py
 
       - name: Commit and push updated data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/raw/airnow/airnow_aqi_all.csv
-          git commit -m "Automated weekly AirNow update" || echo "No changes to commit"
+          git commit -m "Automated daily AirNow update" || echo "No changes to commit"
           git push
