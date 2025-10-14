@@ -1,15 +1,15 @@
 """
-Historical hourly weather backfill for Hilo, Hawaii using Open-Meteo's ERA5 reanalysis.
+Incremental updater for hourly ERA5 weather data (Hilo, Hawaii).
 
-Uniform with other historical data pulls (AQS, PurpleAir):
- - Loops month-by-month (API limit ~31 days)
- - Appends data frames together
- - Saves one final CSV to data/raw/openmeteo/
+ - Checks the last timestamp in openmeteo_hilo_hourly.csv
+ - Pulls any missing hourly data since that date
+ - Accounts for ERA5's ~5-day data lag
+ - Appends new rows and re-saves the full file
 """
 
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import openmeteo_requests
 from retry_requests import retry
 import requests
@@ -18,13 +18,10 @@ import requests
 # Setup
 BASE_URL = "https://archive-api.open-meteo.com/v1/era5"
 DATA_DIR = "data/raw/openmeteo"
-os.makedirs(DATA_DIR, exist_ok=True)
-OUTFILE = os.path.join(DATA_DIR, "openmeteo_hilo_hourly.csv")
+INFILE = os.path.join(DATA_DIR, "openmeteo_hilo_hourly.csv")
+OUTFILE = INFILE
 
 LAT, LON = 19.7297, -155.09
-START_DATE = pd.Timestamp("2021-01-01")
-END_DATE = pd.Timestamp("2025-10-01")
-
 HOURLY_VARS = [
     "temperature_2m",
     "relative_humidity_2m",
@@ -36,14 +33,14 @@ HOURLY_VARS = [
 ]
 
 
-# Be Nice to the API / Polite Session Timing
+# Friendly Timing
 session = requests.Session()
 retry_session = retry(session, retries=5, backoff_factor=0.3)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 
 def fetch_chunk(start, end):
-    """Fetch one monthly chunk of hourly weather data."""
+    """Fetch one chunk of hourly weather data."""
     params = {
         "latitude": LAT,
         "longitude": LON,
@@ -79,29 +76,49 @@ def fetch_chunk(start, end):
 
 
 def main():
-    print("📆 Starting Open-Meteo historical backfill for Hilo, Hawaii...")
-    all_dfs = []
-    current = START_DATE
+    print("🔄 Updating Open-Meteo data for Hilo...")
 
-    while current < END_DATE:
-        chunk_end = min(current + pd.DateOffset(days=31), END_DATE)
-        print(f"→ Fetching {current.date()} → {chunk_end.date()}")
-        df = fetch_chunk(current, chunk_end)
-        if df is not None:
-            all_dfs.append(df)
-        current = chunk_end
-
-    if not all_dfs:
-        print("❌ No data fetched — check API connection.")
+    if not os.path.exists(INFILE):
+        print("❌ Historical file not found. Run pull_openmeteo.py first.")
         return
 
-    combined = pd.concat(all_dfs, ignore_index=True)
+    existing = pd.read_csv(INFILE, parse_dates=["datetime_utc"])
+    last_date = existing["datetime_utc"].max()
+    print(f"📅 Last data point: {last_date}")
+
+    # Start from the next hour after last record
+    start_date = (last_date + pd.Timedelta(hours=1)).tz_localize(None)
+
+    # ERA5 reanalysis lags ~5 days behind current date
+    end_date = (datetime.utcnow() - timedelta(days=5))
+    if start_date >= end_date:
+        print("✅ No new data available yet (ERA5 lag ~5 days).")
+        return
+
+    print(f"→ Fetching {start_date.date()} → {end_date.date()}")
+
+    # Pull by 31-day chunks to stay safe
+    new_data = []
+    current = start_date
+    while current < end_date:
+        chunk_end = min(current + pd.DateOffset(days=31), end_date)
+        df = fetch_chunk(current, chunk_end)
+        if df is not None:
+            new_data.append(df)
+        current = chunk_end
+
+    if not new_data:
+        print("⚠️ No new data returned.")
+        return
+
+    new_df = pd.concat(new_data, ignore_index=True)
+    combined = pd.concat([existing, new_df], ignore_index=True)
     combined.drop_duplicates(subset=["datetime_utc"], inplace=True)
     combined.sort_values("datetime_utc", inplace=True)
     combined.reset_index(drop=True, inplace=True)
 
     combined.to_csv(OUTFILE, index=False)
-    print(f"✅ Saved {len(combined):,} hourly rows to {OUTFILE}")
+    print(f"✅ Updated file saved — now contains {len(combined):,} total rows.")
 
 
 if __name__ == "__main__":

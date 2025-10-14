@@ -1,0 +1,40 @@
+name: Update OpenMeteo Data (Daily)
+
+on:
+  schedule:
+    # Runs once daily at 09:00 UTC (11 PM HST)
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-openmeteo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openmeteo-requests retry-requests requests
+
+      - name: Run OpenMeteo updater
+        run: python data_pulls/openmeteo_recent.py
+
+      - name: Commit and push if data changed
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          if [[ -n "$(git status --porcelain data/raw/openmeteo/)" ]]; then
+            git add data/raw/openmeteo/
+            git commit -m "Auto-update OpenMeteo data"
+            git push
+          else
+            echo "No changes in OpenMeteo data."
+          fi
