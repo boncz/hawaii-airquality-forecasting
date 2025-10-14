@@ -25,7 +25,7 @@ jobs:
           pip install pandas openmeteo-requests retry-requests requests
 
       - name: Run OpenMeteo updater
-        run: python data_pulls/openmeteo_recent.py
+        run: python src/ingestion/openmeteo_recent.py
 
       - name: Commit and push if data changed
         run: |

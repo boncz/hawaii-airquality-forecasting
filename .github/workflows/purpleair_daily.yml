@@ -1,0 +1,35 @@
+name: Daily PurpleAir Ingestion
+
+on:
+  schedule:
+    - cron: "0 20 * * *"  # 10 AM HST (20:00 UTC) daily
+  workflow_dispatch:
+
+jobs:
+  ingest-purpleair:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install requests pandas python-dotenv
+
+      - name: Run daily PurpleAir ingestion
+        env:
+          PURPLEAIR_KEY: ${{ secrets.PURPLEAIR_KEY }}
+        run: |
+          python src/ingestion/purpleair_daily.py
+
+      - name: Upload updated data
+        uses: actions/upload-artifact@v4
+        with:
+          name: purpleair_daily_output
+          path: data/raw/purpleair/purpleair_all.csv
