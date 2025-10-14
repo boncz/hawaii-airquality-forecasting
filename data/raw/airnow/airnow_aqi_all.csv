@@ -1,4 +1,4 @@
-2021-10-06,0,HST,Hilo,HI,19.7175,-155.1103,PM2.5,19,"{'Number': 1, 'Name': 'Good'}",2021-10-06,0
+DateObserved,HourObserved,LocalTimeZone,ReportingArea,StateCode,Latitude,Longitude,ParameterName,AQI,Category,DateObserved_UTC,HourObserved_UTC
 2021-10-06,1,HST,Hilo,HI,19.7175,-155.1103,PM2.5,19,"{'Number': 1, 'Name': 'Good'}",2021-10-06,1
 2021-10-06,2,HST,Hilo,HI,19.7175,-155.1103,PM2.5,19,"{'Number': 1, 'Name': 'Good'}",2021-10-06,2
 2021-10-06,3,HST,Hilo,HI,19.7175,-155.1103,PM2.5,19,"{'Number': 1, 'Name': 'Good'}",2021-10-06,3

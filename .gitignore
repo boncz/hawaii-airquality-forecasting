@@ -25,3 +25,4 @@ pull_purpleair.ipynb
 
 # too big data files
 data/raw/aqs/aqs_all.csv
+data/interim/aqs_clean.csv
