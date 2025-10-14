@@ -1,3 +1,20 @@
+"""
+Fetches 4 years of historical hourly AirNow data for Hilo, Hawai‘i
+using the AirNow API (https://www.airnowapi.org/).
+
+The script retrieves PM2.5 and AQI observations within a 10 km radius
+of the specified latitude and longitude, one day at a time, and appends
+each day's results to data/raw/airnow/airnow_aqi_all.csv.
+
+Includes retry logic, polite rate-limiting, and checkpointed writes
+to safely build a complete multi-year archive for model training.
+
+This script is intended for one-time or occasional use to build
+or refresh the historical AirNow dataset. For routine updates,
+see airnow_daily.py.
+"""
+
+
 # src/ingestion/airnow.py
 import os
 import time
