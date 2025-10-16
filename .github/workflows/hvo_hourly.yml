@@ -5,6 +5,10 @@ on:
     - cron: "0 * * * *"  # every hour UTC
   workflow_dispatch:
 
+
+permissions:
+  contents: write
+
 jobs:
   update-hvo-hourly:
     runs-on: ubuntu-latest

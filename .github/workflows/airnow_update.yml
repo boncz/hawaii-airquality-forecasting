@@ -5,6 +5,10 @@ on:
     - cron: "0 12 * * *"  # every day at 12:00 UTC (~2 a.m. HST)
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+
 jobs:
   update-airnow-daily:
     runs-on: ubuntu-latest
