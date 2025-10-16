@@ -1,16 +1,9 @@
-# Byte-compiled / cache
 __pycache__/
 *.py[cod]
 *.so
-
-# Jupyter
 .ipynb_checkpoints/
-
-# Virtual environments
 venv/
 .env
-
-# OS files
 .DS_Store
 Thumbs.db
 
