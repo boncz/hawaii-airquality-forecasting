@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   ingest-purpleair:
+    if: false #disabling this due to lack of payment
     runs-on: ubuntu-latest
 
     steps:
