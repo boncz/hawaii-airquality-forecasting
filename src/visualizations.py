@@ -7,6 +7,7 @@ Figures are saved to reports/figures/ for inclusion in the thesis Results sectio
 
 from pathlib import Path
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import r2_score
@@ -344,6 +345,109 @@ def save_performance_table_image(df):
     plt.close()
     print("✅ Saved model performance table image.")
 
+
+
+def plot_missing_values(df, title="Missing Values by Column"):
+    """Bar chart of missing value counts per column."""
+    plt.figure(figsize=(10,4))
+    df.isnull().sum().sort_values(ascending=False).plot.bar(color="gray")
+    plt.title(title)
+    plt.ylabel("Count of Missing Values")
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_scatter_aqs_vs_purpleair(df, title="AQS vs PurpleAir (Hourly)"):
+    """Scatter plot comparing hourly AQS and PurpleAir PM2.5."""
+    subset = df.dropna(subset=["pm25_aqs", "pm25_purpleair"])
+    plt.figure(figsize=(6,6))
+    plt.scatter(subset["pm25_aqs"], subset["pm25_purpleair"], alpha=0.3, color="slateblue")
+    plt.plot([0, subset["pm25_aqs"].max()], [0, subset["pm25_aqs"].max()], 'k--', lw=1)
+    plt.xlabel("AQS PM₂.₅ (µg/m³)")
+    plt.ylabel("PurpleAir PM₂.₅ (µg/m³)")
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_hourly_vs_daily(df_hourly, df_daily):
+    """Overlays hourly and daily scatter plots to illustrate smoothing effect."""
+    plt.figure(figsize=(8,6))
+    plt.scatter(df_hourly["pm25_aqs"], df_hourly["pm25_purpleair"], alpha=0.25, label="Hourly", color="gray")
+    plt.scatter(df_daily["pm25_aqs"], df_daily["pm25_purpleair"], alpha=0.8, label="Daily", color="darkorange")
+    plt.plot([0, max(df_hourly["pm25_aqs"].max(), df_hourly["pm25_purpleair"].max())],
+             [0, max(df_hourly["pm25_aqs"].max(), df_hourly["pm25_purpleair"].max())], 'k--', lw=1)
+    plt.xlabel("AQS PM₂.₅ (µg/m³)")
+    plt.ylabel("PurpleAir PM₂.₅ (µg/m³)")
+    plt.title("Hourly vs Daily Comparison of AQS and PurpleAir")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_bias_vs_humidity(df):
+    """Plots mean and variability of bias (PurpleAir - AQS) by humidity."""
+    df = df.dropna(subset=["pm25_aqs", "pm25_purpleair", "humidity"]).copy()
+    df["bias"] = df["pm25_purpleair"] - df["pm25_aqs"]
+    df["humidity_bin"] = pd.cut(df["humidity"], bins=np.arange(0, 110, 10))
+    stats = df.groupby("humidity_bin")["bias"].agg(["mean", "std"]).reset_index()
+
+    fig, ax1 = plt.subplots(figsize=(8,5))
+    ax2 = ax1.twinx()
+    sns.barplot(x="humidity_bin", y="mean", data=stats, ax=ax1, color="skyblue", label="Mean Bias")
+    sns.lineplot(x="humidity_bin", y="std", data=stats, ax=ax2, color="red", label="Std Dev", marker="o")
+
+    ax1.set_xlabel("Humidity (%)")
+    ax1.set_ylabel("Mean Bias (PurpleAir - AQS)")
+    ax2.set_ylabel("Bias Std Dev")
+    ax1.set_title("Bias Behavior Across Humidity Levels")
+    ax1.tick_params(axis='x', rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_bias_by_humidity_and_wind(df):
+    """2D heatmap of mean bias across humidity/wind bins."""
+    df = df.dropna(subset=["pm25_aqs", "pm25_purpleair", "humidity", "wind_speed_10m"]).copy()
+    df["bias"] = df["pm25_purpleair"] - df["pm25_aqs"]
+    df["humidity_bin"] = pd.cut(df["humidity"], bins=np.arange(0, 110, 10))
+    df["wind_bin"] = pd.cut(df["wind_speed_10m"], bins=np.arange(0, df["wind_speed_10m"].max()+2, 2))
+    pivot = df.pivot_table(values="bias", index="humidity_bin", columns="wind_bin", aggfunc="mean")
+
+    plt.figure(figsize=(8,6))
+    sns.heatmap(pivot, cmap="coolwarm", center=0, cbar_kws={"label": "Mean Bias (µg/m³)"})
+    plt.title("Mean Bias by Humidity and Wind Speed")
+    plt.xlabel("Wind Speed (m/s)")
+    plt.ylabel("Humidity (%)")
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_lag_correlation(lags, correlations):
+    """Line plot showing correlation vs time lag."""
+    plt.figure(figsize=(7,4))
+    plt.plot(lags, correlations, marker='o', color='teal')
+    plt.axvline(0, color='gray', linestyle='--')
+    plt.xlabel("Lag (hours)")
+    plt.ylabel("Correlation (r)")
+    plt.title("Lagged Correlation Between AQS and PurpleAir")
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_actual_vs_predicted(y_true, y_pred, title="Model Prediction vs AQS"):
+    """Scatter of predicted vs actual AQS PM2.5."""
+    plt.figure(figsize=(6,6))
+    plt.scatter(y_true, y_pred, alpha=0.3, color="green")
+    lim = [0, max(y_true.max(), y_pred.max())]
+    plt.plot(lim, lim, 'k--', lw=1)
+    plt.xlabel("Actual AQS PM₂.₅")
+    plt.ylabel("Predicted PM₂.₅")
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+  
 
 
 # ---------------------------------------------------------------------
